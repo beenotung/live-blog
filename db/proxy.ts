@@ -57,6 +57,14 @@ export type User = {
   tel: null | string
 }
 
+export type BlogPost = {
+  id?: null | number
+  user_id: number
+  user?: User
+  title: string
+  content: string
+}
+
 export type DBProxy = {
   method: Method[]
   url: Url[]
@@ -66,6 +74,7 @@ export type DBProxy = {
   request_log: RequestLog[]
   ua_stat: UaStat[]
   user: User[]
+  blog_post: BlogPost[]
 }
 
 export let proxy = proxySchema<DBProxy>({
@@ -88,5 +97,9 @@ export let proxy = proxySchema<DBProxy>({
     ],
     ua_stat: [],
     user: [],
+    blog_post: [
+      /* foreign references */
+      ['user', { field: 'user_id', table: 'user' }],
+    ],
   },
 })

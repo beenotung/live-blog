@@ -67,15 +67,29 @@ last_request_log_id integer
 
 user
 ----
-id
+id integer PK
 username varchar(32)
-password_hash char(60) null
-email varchar(320) null
-tel varchar(16) null
+password_hash char(60) NULL
+email varchar(320) NULL
+tel varchar(16) NULL
+
+
+blog_post
+---------
+id integer PK
+user_id integer FK >0- user.id
+title text
+content text
 
 
 # zoom: 1.000
 # view: (0, 0)
+# text-bg: #6495ed
+# text-color: #000000
+# diagram-bg: #f5f5f5
+# diagram-text: #f5f5f5
+# table-bg: #ffffff
+# table-text: #000000
 # request_log (74, 55)
 # method (448, 16)
 # url (450, 131)
@@ -83,4 +97,5 @@ tel varchar(16) null
 # ua_type (901, 232)
 # ua_bot (901, 385)
 # ua_stat (532, 493)
-# user (710, 393)
+# user (69, 487)
+# blog_post (462, 719)

@@ -15,6 +15,7 @@ import Login from './pages/login.js'
 import Register from './pages/register.js'
 import Profile from './pages/profile.js'
 import type { MenuRoute } from './components/menu'
+import Blog from './pages/blog.js'
 
 let titles: Record<string, string> = {}
 
@@ -87,6 +88,7 @@ let routeDict: Routes = {
   ...Login.routes,
   ...Register.routes,
   ...Profile.routes,
+  ...Blog.routes,
   '/LICENSE': {
     title: 'BSD 2-Clause License of ts-liveview',
     description:

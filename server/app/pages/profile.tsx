@@ -7,12 +7,21 @@ import { o } from '../jsx/jsx.js'
 import { Routes } from '../routes.js'
 import { decodeJwt } from '../jwt.js'
 import { proxy } from '../../../db/proxy.js'
+import Style from '../components/style.js'
+import { mapArray } from '../components/fragment.js'
+
+let style = Style(/* css */ `
+#profile .blog-post-list li {
+  list-style-type: arabic-indic;
+}
+`)
 
 let ProfilePage = (_attrs: {}, context: Context) => {
   let token = getContextCookie(context)?.token
 
   return (
     <div id="profile">
+      {style}
       <h2>Profile Page</h2>
       <p>{commonTemplatePageText}</p>
       {token ? (
@@ -37,6 +46,17 @@ function renderProfile(token: string) {
   return (
     <>
       <p>Welcome back, {user.username}</p>
+      <p>
+        <Link href="/blog-post/create">Create Blog Post</Link>
+      </p>
+
+      <ol class="blog-post-list">
+        {mapArray(proxy.blog_post, post => (
+          <li>
+            <Link href={'/blog-post/' + post.id}>{post.title}</Link>
+          </li>
+        ))}
+      </ol>
       <a href="/logout">logout</a>
     </>
   )
