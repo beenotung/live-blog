@@ -36,6 +36,10 @@ let createBlogPost = (
 }
 #blogContentPreview {
 }
+#create-blog-post .submit-btn {
+  margin-top: 0.5rem;
+  padding: 0.25rem;
+}
 `)}
     <h2>Create Blog Post</h2>
     <p>You can create a blog post here.</p>
@@ -63,7 +67,7 @@ let createBlogPost = (
         </div>
       </div>
     </div>
-    <button>Submit</button>
+    <input type="submit" value="Submit" class="submit-btn" />
   </form>
 )
 
