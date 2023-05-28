@@ -9,7 +9,6 @@ import { OnWsMessage } from '../ws/wss.js'
 import { dispatchUpdate } from './jsx/dispatch.js'
 import { EarlyTerminate } from './helpers.js'
 import { getWSSession } from './session.js'
-import DemoCookieSession from './pages/demo-cookie-session.js'
 import escapeHtml from 'escape-html'
 import { Flush } from './components/flush.js'
 import { config } from '../config.js'
@@ -24,6 +23,7 @@ import { style } from './app-style.js'
 import { renderIndexTemplate } from '../../template/index.js'
 import escapeHTML from 'escape-html'
 import { HTMLStream } from './jsx/stream.js'
+import { renewAuthCookieMiddleware } from './auth/user.js'
 
 if (config.development) {
   scanTemplateDir('template')
@@ -81,7 +81,7 @@ export function App(main: Node): Element {
 export let appRouter = express.Router()
 
 // non-streaming routes
-appRouter.use('/cookie-session/token', DemoCookieSession.tokenHandler)
+appRouter.use(renewAuthCookieMiddleware)
 Object.entries(redirectDict).forEach(([from, to]) =>
   appRouter.use(from, (_req, res) => res.redirect(to)),
 )

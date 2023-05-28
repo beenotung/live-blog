@@ -2,11 +2,10 @@ import { apiEndpointTitle, title } from '../../config.js'
 import { commonTemplatePageText } from '../components/common-template.js'
 import { Link, Redirect } from '../components/router.js'
 import { Context, ExpressContext } from '../context.js'
-import { getContextCookie } from '../cookie.js'
 import { o } from '../jsx/jsx.js'
 import { Routes } from '../routes.js'
-import { decodeJwt } from '../jwt.js'
 import { proxy } from '../../../db/proxy.js'
+import { eraseUserIdFromCookie, getAuthUserId } from '../auth/user.js'
 import Style from '../components/style.js'
 import { mapArray } from '../components/fragment.js'
 
@@ -17,15 +16,15 @@ let style = Style(/* css */ `
 `)
 
 let ProfilePage = (_attrs: {}, context: Context) => {
-  let token = getContextCookie(context)?.token
+  let user_id = getAuthUserId(context)
 
   return (
     <div id="profile">
       {style}
       <h2>Profile Page</h2>
       <p>{commonTemplatePageText}</p>
-      {token ? (
-        renderProfile(token)
+      {user_id ? (
+        renderProfile(user_id)
       ) : (
         <>
           <p>You are viewing this page as guest.</p>
@@ -40,9 +39,8 @@ let ProfilePage = (_attrs: {}, context: Context) => {
   )
 }
 
-function renderProfile(token: string) {
-  let id = decodeJwt(token).id
-  let user = proxy.user[id]
+function renderProfile(user_id: number) {
+  let user = proxy.user[user_id]
   return (
     <>
       <p>Welcome back, {user.username}</p>
@@ -57,24 +55,20 @@ function renderProfile(token: string) {
           </li>
         ))}
       </ol>
-      <a href="/logout">logout</a>
+      <a href="/logout" rel="nofollow">
+        Logout
+      </a>
     </>
   )
 }
 
 function Logout(_attrs: {}, context: ExpressContext) {
-  context.res.clearCookie('token', {
-    sameSite: 'lax',
-    secure: true,
-    httpOnly: true,
-  })
+  eraseUserIdFromCookie(context.res)
   return <Redirect href="/login" />
 }
 
-export function renderUserMessageInGuestView(
-  token: string,
-  username = tokenToUsername(token),
-) {
+export function UserMessageInGuestView(attrs: { user_id: number }) {
+  let username = proxy.user[attrs.user_id].username
   return (
     <>
       <p>
@@ -86,12 +80,6 @@ export function renderUserMessageInGuestView(
       </p>
     </>
   )
-}
-
-function tokenToUsername(token: string) {
-  let id = decodeJwt(token).id
-  let user = proxy.user[id]
-  return user.username
 }
 
 let routes: Routes = {

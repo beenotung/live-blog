@@ -10,9 +10,8 @@ import { EarlyTerminate } from '../helpers.js'
 import { DynamicContext, getContextFormBody } from '../context.js'
 import { BlogPost, proxy } from '../../../db/proxy.js'
 import { object, string } from 'cast.ts'
-import { getContextToken } from '../auth/token.js'
 import { Link } from '../components/router.js'
-import { decodeJwt } from '../jwt.js'
+import { getAuthUserId } from '../auth/user.js'
 
 let createBlogPost = (
   <form
@@ -89,8 +88,8 @@ let submitFormParser = object({
 })
 
 function Submit(_attrs: {}, context: DynamicContext) {
-  let token = getContextToken(context)
-  if (!token) {
+  let user_id = getAuthUserId(context)
+  if (!user_id) {
     return (
       <div>
         Please login before submitting your blog post.
@@ -98,11 +97,10 @@ function Submit(_attrs: {}, context: DynamicContext) {
       </div>
     )
   }
-  let jwt = decodeJwt(token)
   let input = getContextFormBody(context)
   let body = submitFormParser.parse(input)
   let blog_id = proxy.blog_post.push({
-    user_id: jwt.id,
+    user_id,
     title: body.title,
     content: body.content,
   })

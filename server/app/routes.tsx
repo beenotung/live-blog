@@ -7,7 +7,6 @@ import { o } from './jsx/jsx.js'
 import type { Node } from './jsx/types'
 import About, { License } from './pages/about.js'
 import UserAgents from './pages/user-agents.js'
-import DemoCookieSession from './pages/demo-cookie-session.js'
 import Home from './pages/home.js'
 import NotMatch from './pages/not-match.js'
 import { then } from '@beenotung/tslib/result.js'
@@ -72,12 +71,6 @@ let routeDict: Routes = {
     menuUrl: '/about',
     node: About,
     streaming: true,
-  },
-  '/cookie-session': {
-    title: title('Cookie-based Session'),
-    description: 'Demonstrate accessing cookie with ts-liveview',
-    menuText: 'Cookie Session',
-    node: <DemoCookieSession.index />,
   },
   '/user-agents': {
     title: title('User Agents of Visitors'),
