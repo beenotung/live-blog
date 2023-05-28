@@ -8,11 +8,9 @@ import { proxy } from '../../../db/proxy.js'
 import { eraseUserIdFromCookie, getAuthUserId } from '../auth/user.js'
 import Style from '../components/style.js'
 import { mapArray } from '../components/fragment.js'
+import { filter } from 'better-sqlite3-proxy'
 
 let style = Style(/* css */ `
-#profile .blog-post-list li {
-  list-style-type: arabic-indic;
-}
 `)
 
 let ProfilePage = (_attrs: {}, context: Context) => {
@@ -41,6 +39,8 @@ let ProfilePage = (_attrs: {}, context: Context) => {
 
 function renderProfile(user_id: number) {
   let user = proxy.user[user_id]
+  let posts = filter(proxy.blog_post, { user_id })
+  let post_count = posts.length
   return (
     <>
       <p>Welcome back, {user.username}</p>
@@ -48,13 +48,26 @@ function renderProfile(user_id: number) {
         <Link href="/blog-post/create">Create Blog Post</Link>
       </p>
 
-      <ol class="blog-post-list">
-        {mapArray(proxy.blog_post, post => (
-          <li>
-            <Link href={'/blog-post/' + post.id}>{post.title}</Link>
-          </li>
-        ))}
-      </ol>
+      {post_count === 0 ? (
+        <p style="font-style:italic">
+          You have not created any blog posts yet.
+        </p>
+      ) : (
+        <>
+          <p>
+            You have created{' '}
+            {post_count > 1 ? '1 blog post' : `${post_count} blog posts`}.
+          </p>
+          <ol>
+            {mapArray(posts, post => (
+              <li>
+                <Link href={'/blog-post/' + post.id}>{post.title}</Link>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
       <a href="/logout" rel="nofollow">
         Logout
       </a>
