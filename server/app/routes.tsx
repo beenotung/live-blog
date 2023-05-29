@@ -72,16 +72,16 @@ let routeDict: Routes = {
     node: About,
     streaming: true,
   },
+  ...Login.routes,
+  ...Register.routes,
+  ...Profile.routes,
+  ...Blog.routes,
   '/user-agents': {
     title: title('User Agents of Visitors'),
     description: "User agents of this site's visitors",
     menuText: 'User Agents',
     node: UserAgents,
   },
-  ...Login.routes,
-  ...Register.routes,
-  ...Profile.routes,
-  ...Blog.routes,
   '/LICENSE': {
     title: 'BSD 2-Clause License of ts-liveview',
     description:
