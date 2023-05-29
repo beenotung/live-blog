@@ -71,6 +71,7 @@ let createBlogPost = (
   </form>
 )
 
+// deepcode ignore ReactIncorrectReturnValue: this is realtime update endpoint
 function Preview(_attr: {}, context: WsContext) {
   let content = (context.args?.[0] as string) || ''
   let html = marked(content)
