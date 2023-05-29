@@ -80,6 +80,8 @@ id integer PK
 user_id integer FK >0- user.id
 title text
 content text
+create_time integer null
+publish_time integer null
 
 
 # zoom: 1.000

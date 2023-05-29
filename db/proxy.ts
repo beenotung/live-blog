@@ -63,6 +63,8 @@ export type BlogPost = {
   user?: User
   title: string
   content: string
+  create_time: null | number
+  publish_time: null | number
 }
 
 export type DBProxy = {

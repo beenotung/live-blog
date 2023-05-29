@@ -12,11 +12,12 @@ import { BlogPost, proxy } from '../../../db/proxy.js'
 import { object, string } from 'cast.ts'
 import { Link } from '../components/router.js'
 import { getAuthUserId } from '../auth/user.js'
+import Time from '../components/time.js'
 
 let createBlogPost = (
   <form
     id="create-blog-post"
-    action="/blog-post/submit"
+    action="/blog-post/create/submit"
     method="post"
     onsubmit="emitForm(event)"
   >
@@ -66,7 +67,7 @@ let createBlogPost = (
         </div>
       </div>
     </div>
-    <input type="submit" value="Submit" class="submit-btn" />
+    <input type="submit" value="Save Blog Post" class="submit-btn" />
   </form>
 )
 
@@ -87,7 +88,7 @@ let submitFormParser = object({
   content: string({ trim: true }),
 })
 
-function Submit(_attrs: {}, context: DynamicContext) {
+function Create(_attrs: {}, context: DynamicContext) {
   let user_id = getAuthUserId(context)
   if (!user_id) {
     return (
@@ -103,6 +104,8 @@ function Submit(_attrs: {}, context: DynamicContext) {
     user_id,
     title: body.title,
     content: body.content,
+    create_time: Date.now(),
+    publish_time: null,
   })
   return (
     <div>
@@ -117,12 +120,30 @@ function BlogPost(attrs: { post: BlogPost }) {
   return (
     <div>
       <h2>{post.title}</h2>
-      <p>Posted by {post.user?.username}</p>
-      <hr />
+      <p style="font-style:italic">
+        Posted by {post.user?.username}, <BlogStatus post={post} />
+      </p>
       {Raw(marked(post.content))}
       <hr />
       <Link href="/profile">Other blog posts</Link>
     </div>
+  )
+}
+
+export function BlogStatus(attrs: { post: BlogPost }) {
+  let { post } = attrs
+  let { publish_time, create_time } = post
+  if (!create_time) {
+    create_time = post.create_time = Date.now()
+  }
+  return publish_time ? (
+    <>
+      published since <Time time={publish_time} compact />
+    </>
+  ) : (
+    <>
+      drafting since <Time time={create_time} compact />
+    </>
   )
 }
 
@@ -139,10 +160,10 @@ let routes: Routes = {
     description: 'preview blog content in markdown',
     node: <Preview />,
   },
-  '/blog-post/submit': {
+  '/blog-post/create/submit': {
     title: apiEndpointTitle,
     description: 'submit a new blog post',
-    node: <Submit />,
+    node: <Create />,
   },
   '/blog-post/:id': {
     resolve(context: DynamicContext) {

@@ -9,6 +9,8 @@ import { eraseUserIdFromCookie, getAuthUserId } from '../auth/user.js'
 import Style from '../components/style.js'
 import { mapArray } from '../components/fragment.js'
 import { filter } from 'better-sqlite3-proxy'
+import Time from '../components/time.js'
+import { BlogStatus } from './blog.js'
 
 let style = Style(/* css */ `
 `)
@@ -59,11 +61,14 @@ function renderProfile(user_id: number) {
             {post_count > 1 ? '1 blog post' : `${post_count} blog posts`}.
           </p>
           <ol>
-            {mapArray(posts, post => (
-              <li>
-                <Link href={'/blog-post/' + post.id}>{post.title}</Link>
-              </li>
-            ))}
+            {mapArray(posts, post => {
+              return (
+                <li>
+                  <Link href={'/blog-post/' + post.id}>{post.title}</Link> (
+                  <BlogStatus post={post} />)
+                </li>
+              )
+            })}
           </ol>
         </>
       )}
