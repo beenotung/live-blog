@@ -111,11 +111,6 @@ Object.entries(routeDict).forEach(([url, route]) => {
   }
 })
 
-menuRoutes.push({
-  url: '/some/page/that/does-not/exist',
-  menuText: '404',
-})
-
 Object.entries(redirectDict).forEach(([url, href]) =>
   pageRouter.add(url, {
     url,
