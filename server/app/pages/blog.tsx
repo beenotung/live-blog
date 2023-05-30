@@ -1,4 +1,3 @@
-import { marked } from 'marked'
 import { apiEndpointTitle, title } from '../../config.js'
 import { Raw } from '../components/raw.js'
 import Style from '../components/style.js'
@@ -13,6 +12,7 @@ import { object, string } from 'cast.ts'
 import { Link } from '../components/router.js'
 import { getAuthUserId } from '../auth/user.js'
 import Time from '../components/time.js'
+import { markdownToHtml } from '../format/markdown.js'
 
 let createBlogPost = (
   <form
@@ -74,7 +74,7 @@ let createBlogPost = (
 // deepcode ignore ReactIncorrectReturnValue: this is realtime update endpoint
 function Preview(_attr: {}, context: WsContext) {
   let content = (context.args?.[0] as string) || ''
-  let html = marked(content)
+  let html = markdownToHtml(content)
   let message: ServerMessage = [
     'update-in',
     '#blogContentPreviewInner',
@@ -124,7 +124,7 @@ function BlogPost(attrs: { post: BlogPost }) {
       <p style="font-style:italic">
         Posted by {post.user?.username}, <BlogStatus post={post} />
       </p>
-      {Raw(marked(post.content))}
+      {Raw(markdownToHtml(post.content))}
       <hr />
       <Link href="/profile">Other blog posts</Link>
     </div>
