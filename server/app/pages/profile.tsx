@@ -41,7 +41,7 @@ let ProfilePage = (_attrs: {}, context: Context) => {
 
 function renderProfile(user_id: number) {
   let user = proxy.user[user_id]
-  let posts = filter(proxy.blog_post, { user_id })
+  let posts = filter(proxy.blog_post, { user_id }).reverse()
   let post_count = posts.length
   return (
     <>
@@ -60,7 +60,7 @@ function renderProfile(user_id: number) {
             You have created{' '}
             {post_count === 1 ? '1 blog post' : `${post_count} blog posts`}.
           </p>
-          <ol>
+          <ol reversed>
             {mapArray(posts, post => {
               return (
                 <li>
