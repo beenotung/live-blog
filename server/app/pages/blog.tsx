@@ -100,7 +100,7 @@ let submitFormParser = object({
   content: string({ trim: true }),
 })
 
-function Create(_attrs: {}, context: DynamicContext) {
+function SubmitCreateBlogPost(_attrs: {}, context: DynamicContext) {
   let user_id = getAuthUserId(context)
   if (!user_id) {
     return (
@@ -127,6 +127,29 @@ function Create(_attrs: {}, context: DynamicContext) {
   )
 }
 
+function EditBlogPost(attrs: { post: BlogPost }, context: DynamicContext) {
+  let { post } = attrs
+  return (
+    <form
+      id="edit-blog-post"
+      action={'/blog-post/' + post.id + '/edit/submit'}
+      method="post"
+      onsubmit="emitForm(event)"
+    >
+      <h2>Edit Blog Post</h2>
+      <div>
+        <label>Blog Post Title</label>
+        <input
+          class="input-field"
+          placeholder="Title of the blog post"
+          type="text"
+          name="title"
+        />
+      </div>
+    </form>
+  )
+}
+
 function BlogPost(attrs: { post: BlogPost }) {
   let { post } = attrs
   return (
@@ -135,6 +158,13 @@ function BlogPost(attrs: { post: BlogPost }) {
       <p style="font-style:italic">
         Posted by {post.user?.username}, <BlogStatus post={post} />
       </p>
+      {!post.publish_time ? (
+        <div>
+          <Link href={'/blog-post/' + post.id + '/edit'}>
+            <button>Edit</button>
+          </Link>
+        </div>
+      ) : null}
       {Raw(markdownToHtml(post.content))}
       <hr />
       <Link href="/profile">Other blog posts</Link>
@@ -175,7 +205,7 @@ let routes: Routes = {
   '/blog-post/create/submit': {
     title: apiEndpointTitle,
     description: 'submit a new blog post',
-    node: <Create />,
+    node: <SubmitCreateBlogPost />,
   },
   '/blog-post/:id': {
     resolve(context: DynamicContext) {
@@ -188,6 +218,8 @@ let routes: Routes = {
       }
     },
   },
+  // '/blog-post/:id/edit':{resolve(context: DynamicContext){}}
+  // '/blog-post/:id/edit/submit':{resolve(context: DynamicContext){}}
 }
 
 export default { routes }
