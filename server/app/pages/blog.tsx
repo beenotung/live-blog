@@ -23,48 +23,59 @@ let createBlogPost = (
   >
     {Style(/* css */ `
 #create-blog-post label {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	margin-top: 0.5rem;
-	margin-bottom: 0.25rem;
 }
-#create-blog-post .input-field {
+#create-blog-post label .input-field {
+	margin-top: 0.25rem;
 	padding: 0.5rem;
 }
 #create-blog-post textarea.input-field {
 	font-size: 1em;
 	font-family: initial;
 }
+#create-blog-post .content-container  {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
 #blogContentPreview {
+	margin-top: 0.5rem;
+}
+#blogContentPreviewInner {
+	min-width: 300px;
 }
 #create-blog-post .submit-btn {
-  margin-top: 0.5rem;
-  padding: 0.25rem;
+	margin-top: 0.5rem;
+	padding: 0.25rem;
 }
 `)}
     <h2>Create Blog Post</h2>
     <p>You can create a blog post here.</p>
-    <div>
-      <label>Blog Post Title</label>
+    <label>
+      Blog Post Title:
       <input
         class="input-field"
         placeholder="Title of the blog post"
         type="text"
         name="title"
       />
-    </div>
-    <label>Blog Content</label>
-    <div style="display: flex">
-      <textarea
-        class="input-field"
-        name="content"
-        oninput="emit('/blog-post/preview',this.value)"
-        placeholder="You can write the blog content in markdown format"
-      />
-      <div>
-        <div id="blogContentPreview" class="input-field">
-          <div id="blogContentPreviewInner"></div>
-          <br />
-        </div>
+    </label>
+    <div class="content-container">
+      <label style="flex: 1">
+        Blog Content:
+        <textarea
+          class="input-field"
+          style="flex: 1"
+          name="content"
+          oninput="emit('/blog-post/preview',this.value)"
+          placeholder="You can write the blog content in markdown format"
+        />
+      </label>
+      <div id="blogContentPreview" class="input-field" style="flex: 1">
+        Preview:
+        <div id="blogContentPreviewInner"></div>
       </div>
     </div>
     <input type="submit" value="Save Blog Post" class="submit-btn" />
