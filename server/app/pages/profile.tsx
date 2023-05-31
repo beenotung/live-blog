@@ -58,7 +58,7 @@ function renderProfile(user_id: number) {
         <>
           <p>
             You have created{' '}
-            {post_count > 1 ? '1 blog post' : `${post_count} blog posts`}.
+            {post_count === 1 ? '1 blog post' : `${post_count} blog posts`}.
           </p>
           <ol>
             {mapArray(posts, post => {
