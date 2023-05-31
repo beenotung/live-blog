@@ -63,7 +63,10 @@ function renderProfile(user_id: number) {
             {mapArray(posts, post => {
               return (
                 <li>
-                  <Link href={'/blog-post/' + post.id}>{post.title}</Link> (
+                  <Link href={'/blog-post/' + post.id}>
+                    {post.title || 'untitled'}
+                  </Link>{' '}
+                  (
                   <BlogStatus post={post} />)
                 </li>
               )
