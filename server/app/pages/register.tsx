@@ -21,7 +21,7 @@ import { hashPassword } from '../../hash.js'
 import { Routes, StaticPageRoute } from '../routes.js'
 import { Node } from '../jsx/types.js'
 import { renderError } from '../components/error.js'
-import { getContextCookie, getWsCookie } from '../cookie.js'
+import { getContextCookies, getWsCookies } from '../cookie.js'
 import { getAuthUserId } from '../auth/user.js'
 import { UserMessageInGuestView } from './profile.js'
 
@@ -111,6 +111,7 @@ let guestView = (
         name="username"
         msgId="usernameMsg"
         oninput="emit('/register/check-username', this.value)"
+        autocomplete="username"
       />
       <Field
         label="Email (optional)"
@@ -118,6 +119,7 @@ let guestView = (
         name="email"
         msgId="emailMsg"
         oninput="emit('/register/check-email', this.value)"
+        autocomplete="email"
       />
       <Field
         label="Password"
@@ -125,6 +127,7 @@ let guestView = (
         name="password"
         msgId="passwordMsg"
         oninput="emit('/register/check-password', this.value);this.form.confirm_password.value=''"
+        autocomplete="new-password"
       />
 
       <Field
@@ -133,6 +136,7 @@ let guestView = (
         name="confirm_password"
         msgId="confirmPasswordMsg"
         oninput="checkPassword(this.form)"
+        autocomplete="new-password"
       />
       {Raw(/* html */ `<script>
 function checkPassword (form) {
@@ -171,6 +175,7 @@ function Field(
     name: string
     oninput: string
     msgId: string
+    autocomplete?: string
   },
   context: InputContext,
 ) {
@@ -186,6 +191,7 @@ function Field(
             name={attrs.name}
             oninput={attrs.oninput}
             value={value}
+            autocomplete={attrs.autocomplete}
           />
         </div>
       </label>
@@ -489,12 +495,13 @@ async function submit(context: InputContext): Promise<Node> {
       password_hash: await hashPassword(input.password),
       email: input.email,
       tel: null,
+      avatar: null,
     })
 
     let main: Node
 
     if (context.type === 'ws') {
-      let cookies = getWsCookie(context.ws.ws)
+      let cookies = getWsCookies(context.ws.ws)
       if (cookies) {
         cookies.signedCookies.user_id = String(id)
       }

@@ -2,6 +2,10 @@ import { format_time_duration } from '@beenotung/tslib'
 import { filter, find } from 'better-sqlite3-proxy'
 import { db } from './db.js'
 import { proxy, RequestLog } from './proxy.js'
+import { debugLog } from '../server/debug.js'
+
+let log = debugLog('user-agent')
+log.enabled = true
 
 function classifyUserAgent(ua: string) {
   if (ua.startsWith('TelegramBot')) return { bot: 'TelegramBot' }
@@ -118,14 +122,14 @@ set count = 0
 let reset_stats_part_2 = db.prepare('update ua_type set count = 0')
 let reset_stats_part_3 = db.prepare('update ua_bot set count = 0')
 
-let resetStats = db.transaction(() => {
+let _resetStats = db.transaction(() => {
   reset_stats_part_1.run()
   reset_stats_part_2.run()
   reset_stats_part_3.run()
   ua_stat.last_request_log_id = last_request_log_id = 0
 })
 
-// resetStats() // TODO remove after dev
+// _resetStats() // TODO remove after dev
 
 let other_type_id = getUaTypeId('Other')
 
@@ -171,13 +175,13 @@ const batchStepRequestLogStats = db.transaction(() => {
   let startTime = Date.now()
   for (let i = 0; i < batchSize; i++) {
     last_request_log_id++
-    let log = proxy.request_log[last_request_log_id]
-    if (!log) {
+    let request_log = proxy.request_log[last_request_log_id]
+    if (!request_log) {
       ua_stat.last_request_log_id = last_request_log_id - 1
-      process.stdout.write(`\n  finished batchStepRequestLogStats\n`)
+      log(`\n  finished batchStepRequestLogStats\n`)
       return
     }
-    stepRequestLogStats(log)
+    stepRequestLogStats(request_log)
   }
   ua_stat.last_request_log_id = last_request_log_id
 
@@ -198,13 +202,13 @@ const batchStepRequestLogStats = db.transaction(() => {
   setTimeout(batchStepRequestLogStats, interval)
 })
 
-console.log('start batchStepRequestLogStats...')
+log('start batchStepRequestLogStats...')
 setTimeout(batchStepRequestLogStats)
 
 export let checkNewRequestLog = db.transaction((log_id: number) => {
   if (log_id !== last_request_log_id + 1) return
   last_request_log_id++
-  let log = proxy.request_log[log_id]
-  stepRequestLogStats(log)
+  let request_log = proxy.request_log[log_id]
+  stepRequestLogStats(request_log)
   ua_stat.last_request_log_id = last_request_log_id
 })

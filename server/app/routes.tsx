@@ -8,7 +8,7 @@ import type { Node } from './jsx/types'
 import About, { License } from './pages/about.js'
 import UserAgents from './pages/user-agents.js'
 import Home from './pages/home.js'
-import NotMatch from './pages/not-match.js'
+import NotFoundPageRoute from './pages/not-found.js'
 import { then } from '@beenotung/tslib/result.js'
 import Login from './pages/login.js'
 import Register from './pages/register.js'
@@ -69,19 +69,20 @@ let routeDict: Routes = {
       'About ts-liveview - a server-side rendering realtime webapp framework with progressive enhancement',
     menuText: 'About',
     menuUrl: '/about',
+    menuMatchPrefix: true,
     node: About,
     streaming: true,
   },
-  ...Login.routes,
-  ...Register.routes,
-  ...Profile.routes,
-  ...Blog.routes,
   '/user-agents': {
     title: title('User Agents of Visitors'),
     description: "User agents of this site's visitors",
     menuText: 'User Agents',
     node: UserAgents,
   },
+  ...Login.routes,
+  ...Register.routes,
+  ...Profile.routes,
+  ...Blog.routes,
   '/LICENSE': {
     title: 'BSD 2-Clause License of ts-liveview',
     description:
@@ -107,6 +108,7 @@ Object.entries(routeDict).forEach(([url, route]) => {
       url,
       menuText: route.menuText,
       menuUrl: route.menuUrl || url,
+      menuMatchPrefix: route.menuMatchPrefix,
     })
   }
 })
@@ -121,18 +123,11 @@ Object.entries(redirectDict).forEach(([url, href]) =>
   }),
 )
 
-export let NotFoundPage: PageRoute = {
-  title: title('Page Not Found'),
-  description: 'This page is not found. Probably due to outdated menu.',
-  node: NotMatch,
-  status: 404,
-}
-
 export function matchRoute(
   context: DynamicContext,
 ): PageRouteMatch | Promise<PageRouteMatch> {
   let match = pageRouter.route(context.url)
-  let route: PageRoute = match ? match.value : NotFoundPage
+  let route: PageRoute = match ? match.value : NotFoundPageRoute
   if (route.streaming === undefined) {
     route.streaming = StreamingByDefault
   }

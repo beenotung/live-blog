@@ -1,29 +1,37 @@
 import { o } from './jsx/jsx.js'
 import { scanTemplateDir } from '../template.js'
-import express, { Response } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import type { Context, ExpressContext, WsContext } from './context'
 import type { Element, Node } from './jsx/types'
-import { writeNode } from './jsx/html.js'
+import {
+  escapeHTMLAttributeValue,
+  escapeHTMLTextContent,
+  unquote,
+  writeNode,
+} from './jsx/html.js'
 import { sendHTMLHeader } from './express.js'
 import { OnWsMessage } from '../ws/wss.js'
 import { dispatchUpdate } from './jsx/dispatch.js'
 import { EarlyTerminate } from './helpers.js'
 import { getWSSession } from './session.js'
-import escapeHtml from 'escape-html'
 import { Flush } from './components/flush.js'
 import { config } from '../config.js'
 import Stats from './stats.js'
 import { MuteConsole } from './components/script.js'
-import { matchRoute, PageRouteMatch } from './routes.js'
-import { topMenu } from './components/top-menu.js'
+import { matchRoute, menuRoutes, PageRouteMatch } from './routes.js'
 import { redirectDict } from './routes.js'
 import type { ClientMountMessage, ClientRouteMessage } from '../../client/types'
 import { then } from '@beenotung/tslib/result.js'
 import { style } from './app-style.js'
 import { renderIndexTemplate } from '../../template/index.js'
-import escapeHTML from 'escape-html'
 import { HTMLStream } from './jsx/stream.js'
 import { renewAuthCookieMiddleware } from './auth/user.js'
+import { getWsCookies } from './cookie.js'
+import { PickLanguage } from './components/ui-language.js'
+import Navbar from './components/navbar.js'
+import Sidebar from './components/sidebar.js'
+import Profile from './pages/profile.js'
+import { logRequest } from './log.js'
 
 if (config.development) {
   scanTemplateDir('template')
@@ -35,8 +43,8 @@ function renderTemplate(
 ) {
   const app = options.app
   renderIndexTemplate(stream, {
-    title: escapeHTML(options.title),
-    description: escapeHTML(options.description),
+    title: escapeHTMLTextContent(options.title),
+    description: unquote(escapeHTMLAttributeValue(options.description)),
     app:
       typeof app == 'string' ? app : stream => writeNode(stream, app, context),
   })
@@ -51,7 +59,22 @@ let scripts = config.development ? (
   </>
 )
 
-export function App(main: Node): Element {
+let brand = (
+  <div style="color: darkblue; font-weight: bold">
+    <span style="font-size: 1.7rem" class="text-no-wrap">
+      ts-liveview
+    </span>{' '}
+    <div class="text-no-wrap">
+      <a href="https://news.ycombinator.com/item?id=22830472">HN</a>{' '}
+      <a href="https://github.com/beenotung/ts-liveview">git</a>
+    </div>
+  </div>
+)
+
+export let App = NavbarApp
+// export let App = SidebarApp
+
+export function NavbarApp(route: PageRouteMatch): Element {
   // you can write the AST direct for more compact wire-format
   return [
     'div.app',
@@ -60,34 +83,74 @@ export function App(main: Node): Element {
       // or you can write in JSX for better developer-experience (if you're coming from React)
       <>
         {style}
-        <h1 class="title">
-          ts-liveview{' '}
-          <a href="https://news.ycombinator.com/item?id=22830472">HN</a>{' '}
-          <a href="https://github.com/beenotung/ts-liveview">git</a>
-        </h1>
+        <Navbar brand={brand} menuRoutes={menuRoutes} />
+        <hr />
         {scripts}
-        <Stats />
-        {topMenu}
-        <fieldset>
-          <legend>Router Demo</legend>
-          {main}
-        </fieldset>
+        {route.node}
+        <Flush />
+        <Footer />
+      </>,
+    ],
+  ]
+}
+
+export function SidebarApp(route: PageRouteMatch): Element {
+  // you can write the AST direct for more compact wire-format
+  return [
+    'div.app',
+    {},
+    [
+      // or you can write in JSX for better developer-experience (if you're coming from React)
+      <>
+        {style}
+        {scripts}
+        {Sidebar.style}
+        <div class={Sidebar.containerClass}>
+          <Sidebar brand={brand} menuRoutes={menuRoutes} />
+          <div
+            class={Sidebar.mainContainerClass}
+            style="display: flex; flex-direction: column"
+          >
+            <div style="flex-grow: 1; padding: 0 1rem">{route.node}</div>
+            <Footer style="padding: 0.5rem;" />
+          </div>
+        </div>
         <Flush />
       </>,
     ],
   ]
 }
 
-export let appRouter = express.Router()
+function Footer(attrs: { style?: string }) {
+  return (
+    <footer
+      style={
+        'border-top: 1px solid #aaa; padding-top: 0.5rem; margin-top: 0.5rem;' +
+        (attrs.style || '')
+      }
+    >
+      <PickLanguage style="text-align: end" />
+      <Stats />
+    </footer>
+  )
+}
 
-// non-streaming routes
-appRouter.use(renewAuthCookieMiddleware)
-Object.entries(redirectDict).forEach(([from, to]) =>
-  appRouter.use(from, (_req, res) => res.redirect(to)),
-)
+// prefer flat router over nested router for less overhead
+export function attachRoutes(app: Router) {
+  // ajax/middleware routes
+  app.use(renewAuthCookieMiddleware)
+  Profile.attachRoutes(app)
 
-// html-streaming routes
-appRouter.use((req, res, next) => {
+  // redirect routes
+  Object.entries(redirectDict).forEach(([from, to]) =>
+    app.use(from, (_req, res) => res.redirect(to)),
+  )
+
+  // liveview routes
+  app.use(handleLiveView)
+}
+
+function handleLiveView(req: Request, res: Response, next: NextFunction) {
   sendHTMLHeader(res)
 
   let context: ExpressContext = {
@@ -111,7 +174,7 @@ appRouter.use((req, res, next) => {
       streamHTML(res, context, route)
     }
   })
-})
+}
 
 function responseHTML(
   res: Response,
@@ -130,7 +193,7 @@ function responseHTML(
     renderTemplate(stream, context, {
       title: route.title || config.site_name,
       description: route.description || config.site_description,
-      app: App(route.node),
+      app: App(route),
     })
   } catch (error) {
     if (error === EarlyTerminate) {
@@ -142,8 +205,8 @@ function responseHTML(
     }
     html +=
       error instanceof Error
-        ? 'Internal Error: ' + escapeHtml(error.message)
-        : 'Unknown Error: ' + escapeHtml(String(error))
+        ? 'Internal Error: ' + escapeHTMLTextContent(error.message)
+        : 'Unknown Error: ' + escapeHTMLTextContent(String(error))
   }
 
   // deepcode ignore XSS: the dynamic content is html-escaped
@@ -159,7 +222,7 @@ function streamHTML(
     renderTemplate(res, context, {
       title: route.title || config.site_name,
       description: route.description || config.site_description,
-      app: App(route.node),
+      app: App(route),
     })
     res.end()
   } catch (error) {
@@ -173,8 +236,8 @@ function streamHTML(
     // deepcode ignore XSS: the dynamic content is html-escaped
     res.end(
       error instanceof Error
-        ? 'Internal Error: ' + escapeHtml(error.message)
-        : 'Unknown Error: ' + escapeHtml(String(error)),
+        ? 'Internal Error: ' + escapeHTMLTextContent(error.message)
+        : 'Unknown Error: ' + escapeHTMLTextContent(String(error)),
     )
   }
 }
@@ -190,17 +253,30 @@ export let onWsMessage: OnWsMessage = (event, ws, _wss) => {
     event = event as ClientMountMessage
     eventType = 'mount'
     url = event[1]
-    session.locales = event[2]
+    session.language = event[2]
     let timeZone = event[3]
     if (timeZone && timeZone !== 'null') {
       session.timeZone = timeZone
     }
     session.timezoneOffset = event[4]
+    let cookie = event[5]
+    if (cookie) {
+      getWsCookies(ws.ws).unsignedCookies = Object.fromEntries(
+        new URLSearchParams(
+          cookie
+            .split(';')
+            .map(s => s.trim())
+            .join('&'),
+        ),
+      )
+    }
+    logRequest(ws.request, 'ws', url)
   } else if (event[0][0] === '/') {
     event = event as ClientRouteMessage
     eventType = 'route'
     url = event[0]
     args = event.slice(1)
+    logRequest(ws.request, 'ws', url)
   } else {
     console.log('unknown type of ws message:', event)
     return
@@ -215,7 +291,7 @@ export let onWsMessage: OnWsMessage = (event, ws, _wss) => {
     session,
   }
   then(matchRoute(context), route => {
-    let node = App(route.node)
+    let node = App(route)
     dispatchUpdate(context, node, route.title)
   })
 }

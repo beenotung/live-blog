@@ -2,13 +2,10 @@
 set -e
 set -o pipefail
 
-## create self-signed https cert for local development
-if [ ! -f localhost.pem ] || [ ! -f localhost-key.pem ]; then
-  ./scripts/create-cert.sh
-fi
+hash code && code . || echo "code not in path, you need to open the IDE manually"
 
 #install="slnpm"
-install="pnpm i --prefer-offline"
+install="pnpm i --prefer-offline --no-optional"
 #install="yarn"
 #install="npm i"
 

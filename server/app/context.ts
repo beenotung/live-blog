@@ -3,6 +3,7 @@ import type { ManagedWebsocket } from '../ws/wss'
 import type { RouteContext } from 'url-router.ts'
 import type { Session } from './session'
 import type { PageRoute } from './routes'
+import { getContextCookies } from './cookie.js'
 
 export type Context = StaticContext | DynamicContext
 
@@ -56,5 +57,38 @@ export function getContextFormBody(context: Context): unknown | undefined {
   }
   if (context.type === 'express') {
     return context.req.body
+  }
+}
+
+export function getContextLanguage(context: Context): string | undefined {
+  let lang = getContextCookies(context)?.unsignedCookies.lang
+  if (lang) {
+    return lang
+  }
+  if (context.type === 'static') {
+    return
+  }
+  if (context.type === 'ws') {
+    return fixLanguage(context.session.language)
+  }
+  if (context.type === 'express') {
+    // e.g. en-US,en;q=0.5
+    let language =
+      context.req.headers['accept-language'] ||
+      context.req.headers['content-language']
+    return fixLanguage(language?.split(',')[0])
+  }
+}
+
+function fixLanguage(language: string | undefined): string | undefined {
+  if (!language || language === '*') {
+    return
+  }
+  return language.replace('_', '-')
+}
+
+export function getContextTimezone(context: Context): string | undefined {
+  if (context.type === 'ws') {
+    return context.session.timeZone
   }
 }

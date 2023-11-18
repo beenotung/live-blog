@@ -17,12 +17,15 @@ localhost_*.report.html
 # config
 .env
 .open
-*.cert
-*.key
-*.pem
 
 # MacOS
 .DS_Store
 
 # live server
 server.pid
+
+# user uploaded files
+uploads/
+
+# git files
+*.orig

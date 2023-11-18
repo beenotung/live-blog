@@ -1,15 +1,15 @@
 import { o } from '../jsx/jsx.js'
 import { existsSync, readFileSync } from 'fs'
 import { Switch } from '../components/router.js'
-import { marked } from 'marked'
 import { Raw } from '../components/raw.js'
 import { prerender } from '../jsx/html.js'
 import { Menu } from '../components/menu.js'
 import SourceCode from '../components/source-code.js'
+import { markdownToHtml } from '../format/markdown.js'
 
 let text = readFileSync('README.md').toString()
 
-let html = Raw(marked(text))
+let html = Raw(markdownToHtml(text))
 let markdown = <pre style="white-space: break-spaces">{text}</pre>
 markdown = (
   <pre>
@@ -20,7 +20,7 @@ markdown = (
 // The JSX expression don't need to be re-built on every render
 export let About = (
   <div id="about">
-    <h2>About Page</h2>
+    <h1>About Page</h1>
     <p>
       This page is generated from README.md in the <code>markdown</code> format.
     </p>

@@ -12,7 +12,7 @@ import SourceCode from '../components/source-code.js'
 
 let content = (
   <div id="home">
-    <h2>Home Page</h2>
+    <h1>Home Page</h1>
     <p>
       This website is a{' '}
       <b>
