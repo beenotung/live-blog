@@ -118,6 +118,7 @@ function SubmitCreateBlogPost(_attrs: {}, context: DynamicContext) {
     content: body.content,
     create_time: Date.now(),
     publish_time: null,
+    retract_time: null,
   })
   return (
     <div>
@@ -174,11 +175,15 @@ function BlogPost(attrs: { post: BlogPost }) {
 
 export function BlogStatus(attrs: { post: BlogPost }) {
   let { post } = attrs
-  let { publish_time, create_time } = post
+  let { retract_time, publish_time, create_time } = post
   if (!create_time) {
     create_time = post.create_time = Date.now()
   }
-  return publish_time ? (
+  return retract_time ? (
+    <>
+      retracted since <Time time={retract_time} compact />
+    </>
+  ) : publish_time ? (
     <>
       published since <Time time={publish_time} compact />
     </>
