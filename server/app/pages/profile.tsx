@@ -15,7 +15,7 @@ import { Raw } from '../components/raw.js'
 import { loadClientPlugin } from '../../client-plugin.js'
 import { mapArray } from '../components/fragment.js'
 import { filter } from 'better-sqlite3-proxy'
-import { BlogStatus } from './blog.js'
+import { BlogStatus, getBlogStatus } from './blog.js'
 
 let style = Style(/* css */ `
 #profile .avatar {
@@ -135,8 +135,7 @@ async function previewAvatar(input) {
                   <Link href={'/blog-post/' + post.id}>
                     {post.title || 'untitled'}
                   </Link>{' '}
-                  (
-                  <BlogStatus post={post} />)
+                  {BlogStatus(getBlogStatus(post))}
                 </li>
               )
             })}

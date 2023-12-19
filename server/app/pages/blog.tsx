@@ -153,11 +153,12 @@ function EditBlogPost(attrs: { post: BlogPost }, context: DynamicContext) {
 
 function BlogPost(attrs: { post: BlogPost }) {
   let { post } = attrs
+  let blogStatus = getBlogStatus(post)
   return (
     <div>
       <h2>{post.title}</h2>
       <p style="font-style:italic">
-        Posted by {post.user?.username}, <BlogStatus post={post} />
+        Posted by {post.user?.username}, {BlogStatus(blogStatus)}
       </p>
       {!post.publish_time ? (
         <div>
@@ -173,23 +174,20 @@ function BlogPost(attrs: { post: BlogPost }) {
   )
 }
 
-export function BlogStatus(attrs: { post: BlogPost }) {
-  let { post } = attrs
+export function getBlogStatus(post: BlogPost) {
   let { retract_time, publish_time, create_time } = post
   if (!create_time) {
     create_time = post.create_time = Date.now()
   }
-  return retract_time ? (
+  if (retract_time) return { status: 'retracted' as const, time: retract_time }
+  if (publish_time) return { status: 'published' as const, time: publish_time }
+  return { status: 'drafting' as const, time: create_time }
+}
+
+export function BlogStatus(attrs: { status: string; time: number }) {
+  return (
     <>
-      retracted since <Time time={retract_time} compact />
-    </>
-  ) : publish_time ? (
-    <>
-      published since <Time time={publish_time} compact />
-    </>
-  ) : (
-    <>
-      drafting since <Time time={create_time} compact />
+      {attrs.status} since <Time time={attrs.time} compact />
     </>
   )
 }
@@ -223,7 +221,17 @@ let routes: Routes = {
       }
     },
   },
-  // '/blog-post/:id/edit':{resolve(context: DynamicContext){}}
+  '/blog-post/:id/edit': {
+    resolve(context: DynamicContext) {
+      let id = context.routerMatch?.params['id']
+      let post = proxy.blog_post[id]
+      return {
+        title: title('Edit: ' + post.title),
+        description: post.content.split('\n')[0],
+        node: <EditBlogPost post={post} />,
+      }
+    },
+  },
   // '/blog-post/:id/edit/submit':{resolve(context: DynamicContext){}}
 }
 
